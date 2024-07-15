@@ -19,15 +19,17 @@ import java.io.File;
 public class HttpSyncer {
 
     public static final String HEAD_FILENAME = "x-filename";
+    public static final String HEAD_ORIGIN_FILENAME = "x-origin-filename";
 
     @Autowired
     private RestTemplate restTemplate;
 
-    public String sync(File file, String syncUrl) {
+    public String sync(String originFilename, File file, String syncUrl) {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.add(HEAD_FILENAME, file.getName());
+        headers.add(HEAD_ORIGIN_FILENAME, originFilename);
 
         MultipartBodyBuilder builder = new MultipartBodyBuilder();
         builder.part("file", new FileSystemResource(file));
