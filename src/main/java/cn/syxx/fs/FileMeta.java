@@ -15,6 +15,7 @@ public class FileMeta {
     private String name;
     private String originalFilename;
     private long size;
-//    private String md5;
+    //    private String md5;
+    private String downloadUrl;
     private Map<String, String> tags = new HashMap<>();
 }

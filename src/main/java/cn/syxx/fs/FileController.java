@@ -27,11 +27,18 @@ public class FileController {
     private String uploadPath;
     @Value("${syxfs.backupUrl}")
     private String syncUrl;
+    @Value("${syxfs.downloadUrl}")
+    private String downloadUrl;
     @Value("${syxfs.autoMd5}")
     private boolean autoMd5;
+    @Value("${syxfs.syncBackup}")
+    private boolean syncBackup;
+
 
     @Autowired
     private HttpSyncer syncer;
+    @Autowired
+    private MqSyncer mqSyncer;
 
     @PostMapping("/upload")
     public String upload(@RequestParam("file") MultipartFile file,
@@ -59,6 +66,7 @@ public class FileController {
         meta.setOriginalFilename(originalFilename);
         meta.setName(filename);
         meta.setSize(file.getSize());
+        meta.setDownloadUrl(downloadUrl);
         if (autoMd5) {
             meta.getTags().put("md5", DigestUtils.md5DigestAsHex(new FileInputStream(dest)));
         }
@@ -69,7 +77,15 @@ public class FileController {
 
         // 3.同步文件
         if (syncFlag) {
-            syncer.sync(originalFilename, dest, syncUrl);
+            if (syncBackup) {
+                try {
+                    syncer.sync(originalFilename, dest, syncUrl);
+                } catch (Exception e) {
+                    log.error("sync file error", e);
+                }
+            } else {
+                mqSyncer.sync(meta);
+            }
         }
 
         return filename;

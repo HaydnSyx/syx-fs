@@ -1,14 +1,20 @@
 package cn.syxx.fs;
 
 import com.alibaba.fastjson.JSON;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.FileNameMap;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Objects;
 import java.util.UUID;
 
 public class FileUtils {
@@ -52,5 +58,27 @@ public class FileUtils {
         String json = JSON.toJSONString(meta);
         Files.writeString(Paths.get(metaFile.getAbsolutePath()), json,
                 StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+    }
+
+    public static void writeContent(File file, String content) throws IOException {
+        Files.writeString(Paths.get(file.getAbsolutePath()), content,
+                StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+    }
+
+    public static void download(String download, File file) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<?> entity = new HttpEntity<>(new HttpHeaders());
+        ResponseEntity<Resource> exchange = restTemplate.exchange(download, HttpMethod.GET, entity, Resource.class);
+
+        try (BufferedInputStream bis = new BufferedInputStream(Objects.requireNonNull(exchange.getBody()).getInputStream());
+             OutputStream os = new FileOutputStream(file)) {
+            byte[] buffer = new byte[bis.available()];
+            while (bis.read(buffer) != -1) {
+                os.write(buffer);
+            }
+            os.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
